@@ -50,14 +50,15 @@
         #map {
             width: 1080px;
             height: 600px;
-            margin: 100px auto 0 auto;
+            margin: 200px auto 0 auto;
             position: relative;
+            padding-top: 20px;
         }
         /* Estilo para el título y descripción */
         .map-title {
             text-align: center;
             position: absolute;
-            top: 40px;
+            top: 120px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 24px;
@@ -65,17 +66,21 @@
             color: #333;
             z-index: 1000;
             text-transform: uppercase;
+            width: 100%;
+            margin: 10px 0;
         }
         .map-description {
             text-align: center;
             position: absolute;
-            top: 70px;
+            top: 150px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 16px;
             color: #555;
             z-index: 1000;
             max-width: 80%;
+            line-height: 1.4;
+            margin: 10px 0;
         }
         /* Contenedor para los botones */
         .button-container {
@@ -194,31 +199,92 @@
         }
         /* Ajuste para bajar el panel de capas */
         .leaflet-top.leaflet-right {
-            top: 60px !important; /* Bajamos el panel de capas */
+            top: 60px !important;
+        }
+        /* Estilos del banner */
+        .banner {
+            height: 100px;
+            background: linear-gradient(to right, #a2d5c6, #5b9aa0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            padding: 10px 0;
+        }
+        .banner-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+            padding: 10px 0;
+        }
+        .logo img {
+            height: 65px;
+            width: auto;
+        }
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            margin-right: 30px;
+        }
+        .nav-menu a {
+            font-family: 'Tahoma', sans-serif;
+            font-weight: bold;
+            font-size: 14.4px;
+            color: white !important;
+            text-decoration: none;
+            margin-left: 25px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+        .nav-menu a:hover {
+            color: #f0e68c !important;
+        }
+        .nav-menu i {
+            margin-left: 5px;
+            font-size: 12px;
         }
         </style>
         <title>Visor de Gestión de Residuos - Quemú Quemú</title>
     </head>
     <body>
-        <!-- Banner -->
-        <div class="header-banner">
-            <div class="header-logo">Municipalidad de Quemú Quemú</div>
-            <div class="header-nav">
-                <button>Información</button>
-                <button>Trámites</button>
-                <button>Servicios</button>
-                <button>Dependencias</button>
-                <button>Nuestro Pueblo</button>
-                <button>Gobierno</button>
-                <button>Concejo</button>
-                <button>Contacto</button>
-            </div>
+<!-- Banner -->
+<div class="banner">
+    <div class="banner-content">
+        <div class="logo">
+            <img src="images/logo-quemu-quemu.png" alt="Logo Municipalidad de Quemú Quemú">
         </div>
+        <nav class="nav-menu">
+            <a href="#">INFORMACIÓN</a>
+            <a href="#">TRÁMITES</a>
+            <a href="#">SERVICIOS <i class="fas fa-chevron-down"></i></a>
+            <a href="#">DEPENDENCIAS</a>
+            <a href="#">NUESTRO PUEBLO <i class="fas fa-chevron-down"></i></a>
+            <a href="https://amschajari.github.io/prototipo-residuos-quemu-quemu/">GESTIÓN DE RESIDUOS</a>
+            <a href="#">GOBIERNO</a>
+            <a href="#">CONCEJO</a>
+            <a href="#">CONTACTO</a>
+        </nav>
+    </div>
+</div>
 
         <!-- Título y descripción del visor -->
-        <h1 class="map-title">Gestión de Residuos - Quemú Quemú</h1>
+        <h1 class="map-title">MAPA DE GESTIÓN DE RESIDUOS</h1>
         <p class="map-description">
-            Mapa interactivo para la gestión de residuos en Quemú Quemú. Consulte los días y horarios de recolección diurna, nocturna y de residuos especiales.
+            Mapa interactivo para la gestión de residuos en Quemú Quemú.
+            <br>Consulte los días y horarios de recolección diurna, nocturna y de residuos especiales.
         </p>
 
         <div id="map">
