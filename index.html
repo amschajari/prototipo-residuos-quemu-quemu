@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        /* Estilo para el banner */
+        .header-banner {
+            width: 100%;
+            background: linear-gradient(to right, #0A5C5C, #4DB6AC);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header-logo {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .header-nav {
+            display: flex;
+            gap: 20px;
+        }
+        .header-nav button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .header-nav button:hover {
+            text-decoration: underline;
+        }
+        #map {
+            width: 1080px;
+            height: 600px;
+            margin: 100px auto 0 auto;
+            position: relative;
+        }
+        /* Estilo para el título y descripción */
+        .map-title {
+            text-align: center;
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: 900;
+            color: #333;
+            z-index: 1000;
+            text-transform: uppercase;
+        }
+        .map-description {
+            text-align: center;
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            color: #555;
+            z-index: 1000;
+            max-width: 80%;
+        }
+        /* Contenedor para los botones */
+        .button-container {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        /* Estilo para el botón de instrucciones de recolección nocturna */
+        .instructions-btn {
+            background-color: #0078A8;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+        .instructions-btn:hover {
+            background-color: #005d82;
+        }
+        /* Estilo para el botón de instrucciones de residuos especiales */
+        .special-instructions-btn {
+            background-color: #2E7D32;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+        .special-instructions-btn:hover {
+            background-color: #1B5E20;
+        }
+        /* Estilo para el botón colapsable de mapas base */
+        .basemap-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+        }
+        .basemap-btn {
+            background-color: #555;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .basemap-btn:hover {
+            background-color: #333;
+        }
+        .basemap-dropdown {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            top: 40px;
+            right: 0;
+            z-index: 1001;
+        }
+        .basemap-dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px 20px;
+            border: none;
+            background: white;
+            color: #333;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .basemap-dropdown button:hover {
+            background-color: #f0f0f0;
+        }
+        /* Estilo para los modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        /* Ajuste para bajar el panel de capas */
+        .leaflet-top.leaflet-right {
+            top: 60px !important; /* Bajamos el panel de capas */
+        }
+        </style>
+        <title>Visor de Gestión de Residuos - Quemú Quemú</title>
+    </head>
+    <body>
+        <!-- Banner -->
+        <div class="header-banner">
+            <div class="header-logo">Municipalidad de Quemú Quemú</div>
+            <div class="header-nav">
+                <button>Información</button>
+                <button>Trámites</button>
+                <button>Servicios</button>
+                <button>Dependencias</button>
+                <button>Nuestro Pueblo</button>
+                <button>Gobierno</button>
+                <button>Concejo</button>
+                <button>Contacto</button>
+            </div>
+        </div>
+
+        <!-- Título y descripción del visor -->
+        <h1 class="map-title">Gestión de Residuos - Quemú Quemú</h1>
+        <p class="map-description">
+            Mapa interactivo para la gestión de residuos en Quemú Quemú. Consulte los días y horarios de recolección diurna, nocturna y de residuos especiales.
+        </p>
+
+        <div id="map">
+            <!-- Contenedor para los botones -->
+            <div class="button-container">
+                <button class="instructions-btn" onclick="openInstructions()">Instrucciones Recolección Nocturna</button>
+                <button class="special-instructions-btn" onclick="openSpecialInstructions()">Instrucciones Recolección Residuos Especiales</button>
+            </div>
+            <!-- Botón colapsable de mapas base -->
+            <div class="basemap-container">
+                <button class="basemap-btn" onclick="toggleBasemapDropdown()">
+                    <i class="fas fa-layer-group"></i> Mapas Base
+                </button>
+                <div class="basemap-dropdown" id="basemapDropdown">
+                    <button onclick="setBasemap('osm')">OpenStreetMap</button>
+                    <button onclick="setBasemap('satellite')">Satelital</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de instrucciones de recolección nocturna -->
+        <div id="instructionsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeInstructions()">×</span>
+                <h2>Instrucciones de Recolección Nocturna</h2>
+                <p>La recolección nocturna se realiza de <strong>lunes a viernes de 20 a 23 hs</strong>.</p>
+                <p><strong>Residuos incluidos:</strong></p>
+                <ul>
+                    <li>Residuos orgánicos (restos de comida, cáscaras, etc.)</li>
+                    <li>Residuos reciclables (papel, cartón, plástico, vidrio, metal)</li>
+                    <li>Otros residuos no peligrosos</li>
+                </ul>
+                <p>Por favor, asegúrese de sacar los residuos en los horarios indicados y separarlos correctamente.</p>
+            </div>
+        </div>
+
+        <!-- Modal de instrucciones de residuos especiales -->
+        <div id="specialInstructionsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeSpecialInstructions()">×</span>
+                <h2>Instrucciones de Recolección de Residuos Especiales</h2>
+                <p><strong>Residuos Especiales:</strong> Ramas y Escombros.</p>
+                <p>Serán retirados los días <strong>miércoles de 8 a 13 hs</strong>.</p>
+                <p>Por favor, asegúrese de sacar los residuos en los horarios indicados.</p>
+            </div>
+        </div>
+
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/jueves_0.js"></script>
+        <script src="data/miercoles_1.js"></script>
+        <script src="data/martes_2.js"></script>
+        <script src="data/lunes_3.js"></script>
+        <script src="data/Parcelario_4.js"></script>
+        <script src="data/Recorridos_5.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl: false, maxZoom: 28, minZoom: 1
+        }).fitBounds([[-36.077620502368156, -63.598536397916426], [-36.03938606446785, -63.51657466537645]]);
+        
+        // Mapas base
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© <a href="https://www.esri.com/">Esri</a>'
+        });
+
+        var currentBasemap = 'osm'; // Estado inicial del mapa base
+
+        // Función para alternar la visibilidad del dropdown
+        function toggleBasemapDropdown() {
+            var dropdown = document.getElementById('basemapDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Función para establecer el mapa base
+        function setBasemap(basemap) {
+            if (basemap === 'osm' && currentBasemap !== 'osm') {
+                map.removeLayer(satellite);
+                map.addLayer(osm);
+                currentBasemap = 'osm';
+            } else if (basemap === 'satellite' && currentBasemap !== 'satellite') {
+                map.removeLayer(osm);
+                map.addLayer(satellite);
+                currentBasemap = 'satellite';
+            }
+            toggleBasemapDropdown(); // Cerrar el dropdown después de seleccionar
+        }
+
+        // Cerrar el dropdown si se hace clic fuera de él
+        document.addEventListener('click', function(event) {
+            var dropdown = document.getElementById('basemapDropdown');
+            var button = document.querySelector('.basemap-btn');
+            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> · <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> · <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+
+        // add class to format popup if it contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            if (tempDiv.querySelector('td img')) {
+                popup._contentNode.classList.add('media');
+                setTimeout(function() {
+                    popup.update();
+                }, 10);
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+
+        function pop_jueves_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table></table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_jueves_0_0() {
+            return {
+                pane: 'pane_jueves_0',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,106,47,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_jueves_0');
+        map.getPane('pane_jueves_0').style.zIndex = 400;
+        map.getPane('pane_jueves_0').style['mix-blend-mode'] = 'normal';
+        var layer_jueves_0 = new L.geoJson(json_jueves_0, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_jueves_0',
+            layerName: 'layer_jueves_0',
+            pane: 'pane_jueves_0',
+            onEachFeature: pop_jueves_0,
+            style: style_jueves_0_0,
+        });
+        bounds_group.addLayer(layer_jueves_0);
+        map.addLayer(layer_jueves_0);
+
+        function pop_miercoles_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table></table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_miercoles_1_0() {
+            return {
+                pane: 'pane_miercoles_1',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(59,50,182,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_miercoles_1');
+        map.getPane('pane_miercoles_1').style.zIndex = 401;
+        map.getPane('pane_miercoles_1').style['mix-blend-mode'] = 'normal';
+        var layer_miercoles_1 = new L.geoJson(json_miercoles_1, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_miercoles_1',
+            layerName: 'layer_miercoles_1',
+            pane: 'pane_miercoles_1',
+            onEachFeature: pop_miercoles_1,
+            style: style_miercoles_1_0,
+        });
+        bounds_group.addLayer(layer_miercoles_1);
+        map.addLayer(layer_miercoles_1);
+
+        function pop_martes_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table></table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_martes_2_0() {
+            return {
+                pane: 'pane_martes_2',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(140,100,66,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_martes_2');
+        map.getPane('pane_martes_2').style.zIndex = 402;
+        map.getPane('pane_martes_2').style['mix-blend-mode'] = 'normal';
+        var layer_martes_2 = new L.geoJson(json_martes_2, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_martes_2',
+            layerName: 'layer_martes_2',
+            pane: 'pane_martes_2',
+            onEachFeature: pop_martes_2,
+            style: style_martes_2_0,
+        });
+        bounds_group.addLayer(layer_martes_2);
+        map.addLayer(layer_martes_2);
+
+        function pop_lunes_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table></table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_lunes_3_0() {
+            return {
+                pane: 'pane_lunes_3',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(208,21,18,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_lunes_3');
+        map.getPane('pane_lunes_3').style.zIndex = 403;
+        map.getPane('pane_lunes_3').style['mix-blend-mode'] = 'normal';
+        var layer_lunes_3 = new L.geoJson(json_lunes_3, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_lunes_3',
+            layerName: 'layer_lunes_3',
+            pane: 'pane_lunes_3',
+            onEachFeature: pop_lunes_3,
+            style: style_lunes_3_0,
+        });
+        bounds_group.addLayer(layer_lunes_3);
+        map.addLayer(layer_lunes_3);
+
+        function pop_Parcelario_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table></table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Parcelario_4_0() {
+            return {
+                pane: 'pane_Parcelario_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_Parcelario_4');
+        map.getPane('pane_Parcelario_4').style.zIndex = 404;
+        map.getPane('pane_Parcelario_4').style['mix-blend-mode'] = 'normal';
+        var layer_Parcelario_4 = new L.geoJson(json_Parcelario_4, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_Parcelario_4',
+            layerName: 'layer_Parcelario_4',
+            pane: 'pane_Parcelario_4',
+            onEachFeature: pop_Parcelario_4,
+            style: style_Parcelario_4_0,
+        });
+        bounds_group.addLayer(layer_Parcelario_4);
+        map.addLayer(layer_Parcelario_4);
+
+        function pop_Recorridos_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Camion</th>\
+                        <td>' + (feature.properties['Camion'] !== null ? autolinker.link(feature.properties['Camion'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) {
+                addClassToPopupIfMedia(content, e.popup);
+            });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Recorridos_5_0(feature) {
+            switch(String(feature.properties['Camion'])) {
+                case '1':
+                    return {
+                pane: 'pane_Recorridos_5',
+                opacity: 1,
+                color: 'rgba(37,94,173,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_Recorridos_5',
+                opacity: 1,
+                color: 'rgba(210,72,166,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Recorridos_5');
+        map.getPane('pane_Recorridos_5').style.zIndex = 405;
+        map.getPane('pane_Recorridos_5').style['mix-blend-mode'] = 'normal';
+        var layer_Recorridos_5 = new L.geoJson(json_Recorridos_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Recorridos_5',
+            layerName: 'layer_Recorridos_5',
+            pane: 'pane_Recorridos_5',
+            onEachFeature: pop_Recorridos_5,
+            style: style_Recorridos_5_0,
+        });
+        bounds_group.addLayer(layer_Recorridos_5);
+        map.addLayer(layer_Recorridos_5);
+
+        // Control de capas
+        var overlaysTree = [
+            {label: 'Recorridos<br /><table><tr><td style="text-align: center;"><img src="legend/Recorridos_5_Camión10.png" /></td><td>Camión 1</td></tr><tr><td style="text-align: center;"><img src="legend/Recorridos_5_Camión21.png" /></td><td>Camión 2</td></tr></table>', layer: layer_Recorridos_5},
+            {label: '<img src="legend/Parcelario_4.png" /> Parcelario', layer: layer_Parcelario_4},
+            {label: '<b>Recolección diurna</b>', selectAllCheckbox: true, children: [
+                {label: '<img src="legend/lunes_3.png" /> lunes', layer: layer_lunes_3},
+                {label: '<img src="legend/martes_2.png" /> martes', layer: layer_martes_2},
+                {label: '<img src="legend/miercoles_1.png" /> miercoles', layer: layer_miercoles_1},
+                {label: '<img src="legend/jueves_0.png" /> jueves', layer: layer_jueves_0},
+            ]},
+        ];
+
+        var lay = L.control.layers.tree(null, overlaysTree, {
+            collapsed: false,
+        });
+        lay.addTo(map);
+
+        setBounds();
+
+        // Funciones para los modales
+        function openInstructions() {
+            document.getElementById('instructionsModal').style.display = 'block';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        function openSpecialInstructions() {
+            document.getElementById('specialInstructionsModal').style.display = 'block';
+        }
+
+        function closeSpecialInstructions() {
+            document.getElementById('specialInstructionsModal').style.display = 'none';
+        }
+        </script>
+    </body>
+</html>
